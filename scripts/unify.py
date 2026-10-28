@@ -47,7 +47,7 @@ def main():
         f"{compact_clean.strip()}\n\n"
         f"{pcell_clean.strip()}\n"
     )
-    Path("sram_models_uniform.spice").write_text(combined_netlist)
+    Path("/home/tarran/github/DICD-Project/tb/sram_models_uniform.spice").write_text(combined_netlist)
     print("\n[SUCCESS] Wrote standardized cells to 'sram_models_uniform.spice'")
 
 if __name__ == "__main__":
