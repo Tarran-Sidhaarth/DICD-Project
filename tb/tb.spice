@@ -1,0 +1,177 @@
+* ===========================================================================
+* UNIFIED SKY130 6T SRAM POST-EXTRACTION TESTBENCH  (fixed)
+* Compares: sram_compact (Shared Diffusion) vs. sram_p (PCell)
+* Runs:
+*   1. Transient: Write 1 -> Hold 1 -> Read 1 -> Write 0 -> Hold 0 -> Read 0
+*   2. DC butterfly curves (QB vs Q): Hold SNM, Read SNM, Writability
+*      (SNM numbers are computed by snm_calc.py, run automatically at the end)
+* Run with:   ngspice sram_tb.spice      (keep snm_calc.py in the same folder)
+* ===========================================================================
+
+* --- 1. PDK Models & Standardized Extracted Netlists ---
+.lib "/home/tarran/.volare/volare/sky130/versions/0fe599b2afb6708d281543108caf8310912f54af/sky130A/libs.tech/ngspice/sky130.lib.spice" tt
+.include "sram_models_uniform.spice"
+
+.param VDD_VAL = 1.8
+VVDD vdd 0 DC {VDD_VAL}
+* NOTE: no VGND source. In ngspice the node name "gnd" is an alias for node 0,
+* so "VGND gnd 0" was a voltage source with both terminals on the same node
+* ("instance vgnd is a shorted VSRC"). Ground is simply node 0 below.
+
+* ===========================================================================
+* PART A: TRANSIENT TEST CIRCUIT (Both Cells Driven by Identical Stimulus)
+* Pin Order: (vdd gnd wl bl blb q qb)
+* ===========================================================================
+
+* --- Cell 1: sram_compact (Shared Diffusion) ---
+XTRAN_COMP vdd 0 wl_tr bl_c blb_c q_c qb_c sram_compact
+CBL_C  bl_c  0 30f
+CBLB_C blb_c 0 30f
+XPRE_BL_C  bl_c  pre_n vdd vdd sky130_fd_pr__pfet_01v8 w=2.0 l=0.15
+XPRE_BLB_C blb_c pre_n vdd vdd sky130_fd_pr__pfet_01v8 w=2.0 l=0.15
+S_DRV_BL_C  bl_c  data_in  we 0 SW_DRV
+S_DRV_BLB_C blb_c datab_in we 0 SW_DRV
+
+* --- Cell 2: sram_p (PCell Layout) ---
+XTRAN_PCELL vdd 0 wl_tr bl_p blb_p q_p qb_p sram_p
+CBL_P  bl_p  0 30f
+CBLB_P blb_p 0 30f
+XPRE_BL_P  bl_p  pre_n vdd vdd sky130_fd_pr__pfet_01v8 w=2.0 l=0.15
+XPRE_BLB_P blb_p pre_n vdd vdd sky130_fd_pr__pfet_01v8 w=2.0 l=0.15
+S_DRV_BL_P  bl_p  data_in  we 0 SW_DRV
+S_DRV_BLB_P blb_p datab_in we 0 SW_DRV
+
+.model SW_DRV sw(vt=0.9 vh=0.05 ron=20 roff=10G)
+
+* --- Transient Waveforms (60ns Total) ---
+* 00-10ns: Write 1 | 10-20ns: Hold 1 (Precharge) | 20-30ns: Read 1
+* 30-40ns: Write 0 | 40-50ns: Hold 0 (Precharge) | 50-60ns: Read 0
+VWL_TR wl_tr 0 PWL(
++ 0n 0   1.9n 0   2.0n 1.8   8.0n 1.8   8.1n 0
++ 21.9n 0 22.0n 1.8 28.0n 1.8 28.1n 0
++ 31.9n 0 32.0n 1.8 38.0n 1.8 38.1n 0
++ 51.9n 0 52.0n 1.8 58.0n 1.8 58.1n 0   60n 0 )
+
+VWE we 0 PWL(
++ 0n 0   0.9n 0   1.0n 1.8   9.0n 1.8   9.1n 0
++ 30.9n 0 31.0n 1.8 39.0n 1.8 39.1n 0   60n 0 )
+
+VPRE pre_n 0 PWL(
++ 0n 1.8  9.9n 1.8  10.0n 0  21.0n 0  21.1n 1.8
++ 39.9n 1.8 40.0n 0  51.0n 0  51.1n 1.8  60n 1.8 )
+
+VDATA  data_in  0 PWL(0n 1.8  29.9n 1.8  30.0n 0    60n 0)
+VDATAB datab_in 0 PWL(0n 0    29.9n 0    30.0n 1.8  60n 1.8)
+
+* Initialize both cells to '0' (Q=0, QB=1.8) so Write '1' at t=2ns forces a flip
+.ic v(q_c)=0 v(qb_c)=1.8 v(q_p)=0 v(qb_p)=1.8
+
+* ===========================================================================
+* PART B: DC BUTTERFLY CURVE (SNM) CIRCUIT (QB vs Q)
+* ===========================================================================
+VWL_DC  wl_dc  0 DC 0.0
+VBL_DC  bl_dc  0 DC 1.8
+VBLB_DC blb_dc 0 DC 1.8
+VSWP    swp    0 DC 0.0
+
+* sram_compact Butterfly Pair (Cell 1 forces Q=swp -> reads QB; Cell 2 forces QB=swp -> reads Q)
+XDC_COMP1 vdd 0 wl_dc bl_dc blb_dc swp    qb1_c sram_compact
+XDC_COMP2 vdd 0 wl_dc bl_dc blb_dc q2_c   swp   sram_compact
+
+* sram_p Butterfly Pair
+XDC_PCELL1 vdd 0 wl_dc bl_dc blb_dc swp   qb1_p sram_p
+XDC_PCELL2 vdd 0 wl_dc bl_dc blb_dc q2_p  swp   sram_p
+
+* ===========================================================================
+* AUTOMATED TRANSIENT MEASUREMENTS (.meas)
+* TD= makes the search start just before the relevant WL edge, so earlier
+* BL/BLB/Q transitions (e.g. BLB being driven low during Write 1) are not
+* mistaken for the edge we want.
+* WL rising edges: #1 @2n (Write1), #2 @22n (Read1), #3 @32n (Write0), #4 @52n (Read0)
+* ===========================================================================
+* Write '1' Delay (WL=0.9V rise -> Q=1.62V [90% VDD])
+.meas tran tw1_compact TRIG v(wl_tr) VAL=0.9 RISE=1 TARG v(q_c) VAL=1.62 RISE=1
+.meas tran tw1_pcell   TRIG v(wl_tr) VAL=0.9 RISE=1 TARG v(q_p) VAL=1.62 RISE=1
+
+* Write '0' Delay (WL=0.9V rise @32n -> Q=0.18V [10% VDD])
+.meas tran tw0_compact TRIG v(wl_tr) VAL=0.9 RISE=1 TARG v(q_c) VAL=0.18 FALL=1 TD=31n
+.meas tran tw0_pcell   TRIG v(wl_tr) VAL=0.9 RISE=1 TARG v(q_p) VAL=0.18 FALL=1 TD=31n
+
+* Read '1' Delay (WL rise @22n -> BLB down by 200mV = 1.60V)
+.meas tran tr1_compact TRIG v(wl_tr) VAL=0.9 RISE=1 TARG v(blb_c) VAL=1.60 FALL=1 TD=21.5n
+.meas tran tr1_pcell   TRIG v(wl_tr) VAL=0.9 RISE=1 TARG v(blb_p) VAL=1.60 FALL=1 TD=21.5n
+
+* Read '0' Delay (WL rise @52n -> BL down by 200mV = 1.60V)
+.meas tran tr0_compact TRIG v(wl_tr) VAL=0.9 RISE=1 TARG v(bl_c) VAL=1.60 FALL=1 TD=51.5n
+.meas tran tr0_pcell   TRIG v(wl_tr) VAL=0.9 RISE=1 TARG v(bl_p) VAL=1.60 FALL=1 TD=51.5n
+
+* Voltage bump on the internal '0' node during read (read-disturb check)
+.meas tran vbump_r1_compact MAX v(qb_c) FROM=22n TO=28n
+.meas tran vbump_r1_pcell   MAX v(qb_p) FROM=22n TO=28n
+.meas tran vbump_r0_compact MAX v(q_c)  FROM=52n TO=58n
+.meas tran vbump_r0_pcell   MAX v(q_p)  FROM=52n TO=58n
+
+* ===========================================================================
+* INTERACTIVE CONTROL BLOCK: RUNS TRANSIENT + 3 DC SWEEPS
+* ===========================================================================
+.control
+  set wr_singlescale
+  tran 10p 60n
+  * Dump transient waveforms for plot_sram.py (must come right after tran)
+  wrdata tran_data.txt v(wl_tr) v(we) v(pre_n) v(q_c) v(qb_c) v(bl_c) v(blb_c) v(q_p) v(qb_p) v(bl_p) v(blb_p)
+
+  echo ""
+  echo "================================================================="
+  echo "       6T SRAM POST-EXTRACTION TEXT VERIFICATION REPORT          "
+  echo "       Comparing: sram_compact (Shared) vs sram_p (PCell)        "
+  echo "================================================================="
+
+  echo "--- 1. TRANSIENT PERFORMANCE METRICS ---"
+  echo "Write 1 delay (s)      [compact, pcell]:"
+  print tw1_compact tw1_pcell
+  echo "Write 0 delay (s)      [compact, pcell]:"
+  print tw0_compact tw0_pcell
+  echo "Read 1 access time (s) [compact, pcell]:"
+  print tr1_compact tr1_pcell
+  echo "Read 0 access time (s) [compact, pcell]:"
+  print tr0_compact tr0_pcell
+
+  echo ""
+  echo "--- 2. READ DISTURB / NOISE BUMP CHECK (target < 0.4V) ---"
+  echo "Max '0'-node voltage during Read 1 [compact, pcell]:"
+  print vbump_r1_compact vbump_r1_pcell
+  echo "Max '0'-node voltage during Read 0 [compact, pcell]:"
+  print vbump_r0_compact vbump_r0_pcell
+
+  * ---- Hold butterfly (WL=0) ----
+  alter VWL_DC = 0.0
+  alter VBL_DC = 1.8
+  alter VBLB_DC = 1.8
+  dc VSWP 0 1.8 0.005
+  wrdata snm_hold_compact.txt v(qb1_c) v(q2_c)
+  wrdata snm_hold_pcell.txt   v(qb1_p) v(q2_p)
+
+  * ---- Read butterfly (WL=1.8, both bitlines at VDD) ----
+  alter VWL_DC = 1.8
+  alter VBL_DC = 1.8
+  alter VBLB_DC = 1.8
+  dc VSWP 0 1.8 0.005
+  wrdata snm_read_compact.txt v(qb1_c) v(q2_c)
+  wrdata snm_read_pcell.txt   v(qb1_p) v(q2_p)
+
+  * ---- Write butterfly (WL=1.8, BL=0, BLB=VDD): writable if one lobe collapses ----
+  alter VWL_DC = 1.8
+  alter VBL_DC = 0.0
+  alter VBLB_DC = 1.8
+  dc VSWP 0 1.8 0.005
+  wrdata snm_write_compact.txt v(qb1_c) v(q2_c)
+  wrdata snm_write_pcell.txt   v(qb1_p) v(q2_p)
+
+  * Butterfly -> SNM maths (largest-inscribed-square, 45-degree rotation) in Python
+  shell python3 snm_calc.py
+  * Stacked (one-above-the-other) plots -> PNG files + window
+  shell python3 plot_sram.py
+  echo "================================================================="
+.endc
+
+.end

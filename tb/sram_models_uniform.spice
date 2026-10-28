@@ -1,0 +1,103 @@
+* ==================================================================
+* Auto-Generated Uniform 6T SRAM Extracted Netlists
+* Standard Port Order: vdd gnd wl bl blb q qb
+* ==================================================================
+
+* NGSPICE file created from sram_compact.ext - technology: sky130A
+
+.subckt sram_compact vdd gnd wl bl blb q qb
+X0 qb q vdd vdd sky130_fd_pr__pfet_01v8 ad=0.1932 pd=1.76 as=0.1176 ps=0.98 w=0.42 l=0.15
+X1 vdd qb q vdd sky130_fd_pr__pfet_01v8 ad=0.1176 pd=0.98 as=0.1974 ps=1.78 w=0.42 l=0.15
+X2 q wl bl gnd sky130_fd_pr__nfet_01v8 ad=0.24 pd=1.48 as=0.44 ps=2.88 w=1 l=0.3
+X3 qb q gnd gnd sky130_fd_pr__nfet_01v8 ad=0.205 pd=1.41 as=0.28 ps=1.56 w=1 l=0.15
+X4 gnd qb q gnd sky130_fd_pr__nfet_01v8 ad=0.28 pd=1.56 as=0.24 ps=1.48 w=1 l=0.15
+X5 blb wl qb gnd sky130_fd_pr__nfet_01v8 ad=0.42 pd=2.84 as=0.205 ps=1.41 w=1 l=0.3
+C0 vdd q 0.14863f
+C1 blb bl 0.04238f
+C2 qb vdd 0.21512f
+C3 wl bl 0.07486f
+C4 qb q 0.17737f
+C5 wl blb 0.07947f
+C6 vdd bl 0.11566f
+C7 q bl 0.0687f
+C8 qb bl 0.01257f
+C9 vdd blb 0.15433f
+C10 wl vdd 0.01479f
+C11 q blb 0.0134f
+C12 qb blb 0.07654f
+C13 wl q 0.03009f
+C14 wl qb 0.0283f
+C15 blb gnd 0.34409f
+C16 bl gnd 0.84297f
+C17 q gnd 0.19104f
+C18 vdd gnd 1.6471f
+.ends
+
+* NGSPICE file created from sram_p.ext - technology: sky130A
+
+.subckt sky130_fd_pr__nfet_01v8_KF5KU3 a_n73_n50# a_n33_n138# a_15_n50# VSUBS
+X0 a_15_n50# a_n33_n138# a_n73_n50# VSUBS sky130_fd_pr__nfet_01v8 ad=0.145 pd=1.58 as=0.145 ps=1.58 w=0.5 l=0.15
+C0 a_n73_n50# a_n33_n138# 0.0184f
+C1 a_15_n50# a_n33_n138# 0.0184f
+C2 a_15_n50# a_n73_n50# 0.04413f
+C3 a_15_n50# VSUBS 0.21149f
+C4 a_n73_n50# VSUBS 0.21149f
+.ends
+
+.subckt sky130_fd_pr__pfet_01v8_4CEXXN m1_217_794# m1_n29_618# m1_223_676# a_15_n42#
++ a_n33_n139# a_n73_n42# w_n109_n142# VSUBS
+X0 a_15_n42# a_n33_n139# a_n73_n42# w_n109_n142# sky130_fd_pr__pfet_01v8 ad=0.1218 pd=1.42 as=0.1218 ps=1.42 w=0.42 l=0.15
+C0 a_n33_n139# a_15_n42# 0.01597f
+C1 a_n73_n42# a_15_n42# 0.03727f
+C2 m1_n29_618# w_n109_n142# 0
+C3 a_n33_n139# m1_n29_618# 0.00268f
+C4 a_n33_n139# w_n109_n142# 0.10756f
+C5 a_n73_n42# w_n109_n142# 0.00984f
+C6 m1_223_676# m1_217_794# 0.0096f
+C7 w_n109_n142# a_15_n42# 0.00984f
+C8 a_n73_n42# a_n33_n139# 0.01597f
+C9 m1_n29_618# VSUBS 0.04411f
+C10 m1_223_676# VSUBS 0.04044f
+C11 m1_217_794# VSUBS 0.04043f
+C12 a_15_n42# VSUBS 0.14858f
+C13 a_n73_n42# VSUBS 0.14858f
+C14 w_n109_n142# VSUBS 0.18574f
+.ends
+
+.subckt sky130_fd_pr__nfet_01v8_2KVPM6 a_n73_n100# a_n33_n188# a_15_n100# VSUBS
+X0 a_15_n100# a_n33_n188# a_n73_n100# VSUBS sky130_fd_pr__nfet_01v8 ad=0.29 pd=2.58 as=0.29 ps=2.58 w=1 l=0.15
+C0 a_n73_n100# a_n33_n188# 0.02676f
+C1 a_15_n100# a_n33_n188# 0.02676f
+C2 a_15_n100# a_n73_n100# 0.08701f
+C3 a_15_n100# VSUBS 0.25179f
+C4 a_n73_n100# VSUBS 0.25179f
+.ends
+
+.subckt sram_p vdd gnd wl bl blb q qb
+Xsky130_fd_pr__nfet_01v8_KF5KU3_0 bl wl q gnd sky130_fd_pr__nfet_01v8_KF5KU3
+Xsky130_fd_pr__nfet_01v8_KF5KU3_1 qb wl blb gnd sky130_fd_pr__nfet_01v8_KF5KU3
+Xsky130_fd_pr__pfet_01v8_4CEXXN_0 wl q q q qb vdd vdd gnd sky130_fd_pr__pfet_01v8_4CEXXN
+Xsky130_fd_pr__nfet_01v8_2KVPM6_0 q qb gnd gnd sky130_fd_pr__nfet_01v8_2KVPM6
+X0 vdd q qb vdd sky130_fd_pr__pfet_01v8 ad=0.1218 pd=1.42 as=0.1218 ps=1.42 w=0.42 l=0.15
+X1 qb q gnd gnd sky130_fd_pr__nfet_01v8 ad=0.29 pd=2.58 as=0.29 ps=2.58 w=1 l=0.15
+C0 vdd blb 0.03945f
+C1 q qb 0.43636f
+C2 wl vdd 0.41611f
+C3 q blb 0.01009f
+C4 wl q 0.13655f
+C5 blb qb 0.02516f
+C6 wl qb 0.24136f
+C7 vdd bl 0.04142f
+C8 wl blb 0.10937f
+C9 bl q 0.02487f
+C10 bl qb 0.0097f
+C11 bl blb 0.01361f
+C12 wl bl 0.11402f
+C13 vdd q 0.23451f
+C14 vdd qb 0.16546f
+C15 qb gnd 0.19773f
+C16 wl gnd 0.35236f
+C17 vdd gnd 1.00638f
+C18 blb gnd 0.32706f
+C19 bl gnd 0.33473f
+.ends
