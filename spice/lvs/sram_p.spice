@@ -1,0 +1,24 @@
+* NGSPICE file created from sram_p.ext - technology: sky130A
+
+.subckt sky130_fd_pr__nfet_01v8_KF5KU3 a_n73_n50# a_n33_n138# a_15_n50# VSUBS
+X0 a_15_n50# a_n33_n138# a_n73_n50# VSUBS sky130_fd_pr__nfet_01v8 ad=0.145 pd=1.58 as=0.145 ps=1.58 w=0.5 l=0.15
+.ends
+
+.subckt sky130_fd_pr__pfet_01v8_4CEXXN m1_217_794# m1_n29_618# m1_223_676# a_15_n42#
++ a_n33_n139# a_n73_n42# w_n109_n142#
+X0 a_15_n42# a_n33_n139# a_n73_n42# w_n109_n142# sky130_fd_pr__pfet_01v8 ad=0.1218 pd=1.42 as=0.1218 ps=1.42 w=0.42 l=0.15
+.ends
+
+.subckt sky130_fd_pr__nfet_01v8_2KVPM6 a_n73_n100# a_n33_n188# a_15_n100# VSUBS
+X0 a_15_n100# a_n33_n188# a_n73_n100# VSUBS sky130_fd_pr__nfet_01v8 ad=0.29 pd=2.58 as=0.29 ps=2.58 w=1 l=0.15
+.ends
+
+.subckt sram_p vdd wl q gnd qb bl blb
+Xsky130_fd_pr__nfet_01v8_KF5KU3_0 bl wl q gnd sky130_fd_pr__nfet_01v8_KF5KU3
+Xsky130_fd_pr__nfet_01v8_KF5KU3_1 qb wl blb gnd sky130_fd_pr__nfet_01v8_KF5KU3
+Xsky130_fd_pr__pfet_01v8_4CEXXN_0 wl q q q qb vdd vdd sky130_fd_pr__pfet_01v8_4CEXXN
+Xsky130_fd_pr__nfet_01v8_2KVPM6_0 q qb gnd gnd sky130_fd_pr__nfet_01v8_2KVPM6
+X0 vdd q qb vdd sky130_fd_pr__pfet_01v8 ad=0.1218 pd=1.42 as=0.1218 ps=1.42 w=0.42 l=0.15
+X1 qb q gnd gnd sky130_fd_pr__nfet_01v8 ad=0.29 pd=2.58 as=0.29 ps=2.58 w=1 l=0.15
+.ends
+

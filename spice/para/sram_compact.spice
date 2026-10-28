@@ -1,0 +1,30 @@
+* NGSPICE file created from sram_compact.ext - technology: sky130A
+
+.subckt sram_compact q qb vdd gnd wl bl blb
+X0 qb q vdd vdd sky130_fd_pr__pfet_01v8 ad=0.1932 pd=1.76 as=0.1176 ps=0.98 w=0.42 l=0.15
+X1 vdd qb q vdd sky130_fd_pr__pfet_01v8 ad=0.1176 pd=0.98 as=0.1974 ps=1.78 w=0.42 l=0.15
+X2 q wl bl gnd sky130_fd_pr__nfet_01v8 ad=0.24 pd=1.48 as=0.44 ps=2.88 w=1 l=0.3
+X3 qb q gnd gnd sky130_fd_pr__nfet_01v8 ad=0.205 pd=1.41 as=0.28 ps=1.56 w=1 l=0.15
+X4 gnd qb q gnd sky130_fd_pr__nfet_01v8 ad=0.28 pd=1.56 as=0.24 ps=1.48 w=1 l=0.15
+X5 blb wl qb gnd sky130_fd_pr__nfet_01v8 ad=0.42 pd=2.84 as=0.205 ps=1.41 w=1 l=0.3
+C0 vdd q 0.14863f
+C1 blb bl 0.04238f
+C2 qb vdd 0.21512f
+C3 wl bl 0.07486f
+C4 qb q 0.17737f
+C5 wl blb 0.07947f
+C6 vdd bl 0.11566f
+C7 q bl 0.0687f
+C8 qb bl 0.01257f
+C9 vdd blb 0.15433f
+C10 wl vdd 0.01479f
+C11 q blb 0.0134f
+C12 qb blb 0.07654f
+C13 wl q 0.03009f
+C14 wl qb 0.0283f
+C15 blb gnd 0.34409f
+C16 bl gnd 0.84297f
+C17 q gnd 0.19104f
+C18 vdd gnd 1.6471f
+.ends
+
