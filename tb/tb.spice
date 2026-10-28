@@ -168,9 +168,9 @@ XDC_PCELL2 vdd 0 wl_dc bl_dc blb_dc q2_p  swp   sram_p
   wrdata snm_write_pcell.txt   v(qb1_p) v(q2_p)
 
   * Butterfly -> SNM maths (largest-inscribed-square, 45-degree rotation) in Python
-  shell python3 snm_calc.py
+  shell python3 ../scripts/snm_calc.py
   * Stacked (one-above-the-other) plots -> PNG files + window
-  shell python3 plot_sram.py
+  shell python3 ../scripts/plot_sram.py
   echo "================================================================="
 .endc
 
