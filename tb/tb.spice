@@ -9,7 +9,7 @@
 * ===========================================================================
 
 * --- 1. PDK Models & Standardized Extracted Netlists ---
-.lib "/home/tarran/.volare/volare/sky130/versions/0fe599b2afb6708d281543108caf8310912f54af/sky130A/libs.tech/ngspice/sky130.lib.spice" tt
+.lib "/home/tarransidhaarth/.volare/volare/sky130/versions/0fe599b2afb6708d281543108caf8310912f54af/sky130A/libs.tech/ngspice/sky130.lib.spice" tt
 .include "sram_models_uniform.spice"
 
 .param VDD_VAL = 1.8
@@ -84,9 +84,10 @@ XDC_PCELL2 vdd 0 wl_dc bl_dc blb_dc q2_p  swp   sram_p
 
 * ===========================================================================
 * AUTOMATED TRANSIENT MEASUREMENTS (.meas)
-* TD= makes the search start just before the relevant WL edge, so earlier
-* BL/BLB/Q transitions (e.g. BLB being driven low during Write 1) are not
-* mistaken for the edge we want.
+* TRIG RISE=n picks the n-th WL edge. TD= on the TARG clause makes the target
+* search start just before that edge, so earlier BL/BLB/Q transitions (e.g. BLB
+* driven low during Write 1) are not mistaken for it. (TD only applies to the
+* clause it is written in.)
 * WL rising edges: #1 @2n (Write1), #2 @22n (Read1), #3 @32n (Write0), #4 @52n (Read0)
 * ===========================================================================
 * Write '1' Delay (WL=0.9V rise -> Q=1.62V [90% VDD])
@@ -94,16 +95,16 @@ XDC_PCELL2 vdd 0 wl_dc bl_dc blb_dc q2_p  swp   sram_p
 .meas tran tw1_pcell   TRIG v(wl_tr) VAL=0.9 RISE=1 TARG v(q_p) VAL=1.62 RISE=1
 
 * Write '0' Delay (WL=0.9V rise @32n -> Q=0.18V [10% VDD])
-.meas tran tw0_compact TRIG v(wl_tr) VAL=0.9 RISE=1 TARG v(q_c) VAL=0.18 FALL=1 TD=31n
-.meas tran tw0_pcell   TRIG v(wl_tr) VAL=0.9 RISE=1 TARG v(q_p) VAL=0.18 FALL=1 TD=31n
+.meas tran tw0_compact TRIG v(wl_tr) VAL=0.9 RISE=3 TARG v(q_c) VAL=0.18 FALL=1 TD=31n
+.meas tran tw0_pcell   TRIG v(wl_tr) VAL=0.9 RISE=3 TARG v(q_p) VAL=0.18 FALL=1 TD=31n
 
 * Read '1' Delay (WL rise @22n -> BLB down by 200mV = 1.60V)
-.meas tran tr1_compact TRIG v(wl_tr) VAL=0.9 RISE=1 TARG v(blb_c) VAL=1.60 FALL=1 TD=21.5n
-.meas tran tr1_pcell   TRIG v(wl_tr) VAL=0.9 RISE=1 TARG v(blb_p) VAL=1.60 FALL=1 TD=21.5n
+.meas tran tr1_compact TRIG v(wl_tr) VAL=0.9 RISE=2 TARG v(blb_c) VAL=1.60 FALL=1 TD=21.5n
+.meas tran tr1_pcell   TRIG v(wl_tr) VAL=0.9 RISE=2 TARG v(blb_p) VAL=1.60 FALL=1 TD=21.5n
 
 * Read '0' Delay (WL rise @52n -> BL down by 200mV = 1.60V)
-.meas tran tr0_compact TRIG v(wl_tr) VAL=0.9 RISE=1 TARG v(bl_c) VAL=1.60 FALL=1 TD=51.5n
-.meas tran tr0_pcell   TRIG v(wl_tr) VAL=0.9 RISE=1 TARG v(bl_p) VAL=1.60 FALL=1 TD=51.5n
+.meas tran tr0_compact TRIG v(wl_tr) VAL=0.9 RISE=4 TARG v(bl_c) VAL=1.60 FALL=1 TD=51.5n
+.meas tran tr0_pcell   TRIG v(wl_tr) VAL=0.9 RISE=4 TARG v(bl_p) VAL=1.60 FALL=1 TD=51.5n
 
 * Voltage bump on the internal '0' node during read (read-disturb check)
 .meas tran vbump_r1_compact MAX v(qb_c) FROM=22n TO=28n
@@ -126,22 +127,8 @@ XDC_PCELL2 vdd 0 wl_dc bl_dc blb_dc q2_p  swp   sram_p
   echo "       Comparing: sram_compact (Shared) vs sram_p (PCell)        "
   echo "================================================================="
 
-  echo "--- 1. TRANSIENT PERFORMANCE METRICS ---"
-  echo "Write 1 delay (s)      [compact, pcell]:"
-  print tw1_compact tw1_pcell
-  echo "Write 0 delay (s)      [compact, pcell]:"
-  print tw0_compact tw0_pcell
-  echo "Read 1 access time (s) [compact, pcell]:"
-  print tr1_compact tr1_pcell
-  echo "Read 0 access time (s) [compact, pcell]:"
-  print tr0_compact tr0_pcell
-
+  echo "--- 1/2. Transient delays + read-disturb bump: see the .meas list printed above ---"
   echo ""
-  echo "--- 2. READ DISTURB / NOISE BUMP CHECK (target < 0.4V) ---"
-  echo "Max '0'-node voltage during Read 1 [compact, pcell]:"
-  print vbump_r1_compact vbump_r1_pcell
-  echo "Max '0'-node voltage during Read 0 [compact, pcell]:"
-  print vbump_r0_compact vbump_r0_pcell
 
   * ---- Hold butterfly (WL=0) ----
   alter VWL_DC = 0.0
@@ -168,9 +155,9 @@ XDC_PCELL2 vdd 0 wl_dc bl_dc blb_dc q2_p  swp   sram_p
   wrdata snm_write_pcell.txt   v(qb1_p) v(q2_p)
 
   * Butterfly -> SNM maths (largest-inscribed-square, 45-degree rotation) in Python
-  shell python3 ../scripts/snm_calc.py
+  shell python3 "../scripts/snm_calc.py"
   * Stacked (one-above-the-other) plots -> PNG files + window
-  shell python3 ../scripts/plot_sram.py
+  shell python3 "../scripts/plot_sram.py"
   echo "================================================================="
 .endc
 
